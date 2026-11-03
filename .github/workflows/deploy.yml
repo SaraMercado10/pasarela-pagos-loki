@@ -1,0 +1,33 @@
+name: CI/CD Observabilidad Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  run-observability-demo:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 1. Checkout del codigo
+      uses: actions/checkout@v4
+
+    - name: 2. Instalar JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: 3. Compilar proyecto modular Java
+      run: |
+        mkdir -p bin
+        javac --source-path src -d bin src/module-info.java src/tpobservabilidadjava/ObservabilidadDemo.java
+
+    - name: 4. Ejecutar modulo y emitir logs a Grafana Loki
+      env:
+        LOKI_URL: "https://logs-prod-024.grafana.net/loki/api/v1/push"
+        LOKI_USER: "1830385"
+        LOKI_API_KEY: ${{ secrets.LOKI_API_KEY }}
+      run: |
+        java -p bin -m tpobservabilidadjava/tpobservabilidadjava.ObservabilidadDemo
