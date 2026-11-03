@@ -19,15 +19,13 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: 3. Compilar proyecto modular Java
-      run: |
-        mkdir -p bin
-        javac --source-path src -d bin src/module-info.java src/tpobservabilidadjava/ObservabilidadDemo.java
-
-    - name: 4. Ejecutar modulo y emitir logs a Grafana Loki
+    - name: 3. Compilar con Maven
+      run: mvn clean package -DskipTests
+      
+    - name: 4. Ejecutar app y emitir logs a Grafana Loki
       env:
         LOKI_URL: "https://logs-prod-024.grafana.net/loki/api/v1/push"
         LOKI_USER: "1830385"
         LOKI_API_KEY: ${{ secrets.LOKI_API_KEY }}
       run: |
-        java -p bin -m tpobservabilidadjava/tpobservabilidadjava.ObservabilidadDemo
+        java -jar target/*.jar
